@@ -16,11 +16,12 @@ days = st.number_input("Enter Days to Search (1-30):", min_value=1, max_value=30
 
 # List of broader keywords
 keywords = [
- "tung tung tung sahur", "tung sahur", "tung tung sahur", "tung turng tung sahur", 
-"tung tung tung sahur vr", "tung tung tung sahur 360", "tung tung tung sahur vr 360", "tung tung tung sahur meme", "sahur", 
-"tung tung tung tung sahur", "tung tung tung sahur funk", "tung tung tung sahur original", "tungtung sahur", 
-"tung tung sahur funk", "tung tung sahur song", "tungtungtung sahur", 
-"tung tung sahur modu", "tung sahur funk,tung tung tung sahur 4k", "dipssy tung tung sahur"
+ "AI Bigfoot vlog", "Forest AI vlog", "Mythical creature vlog", "AI-generated forest vlog", 
+"AI Bigfoot cooking", "Bigfoot forest adventure", "Bigfoot deer hunting AI", "Cryptid comedy vlog", "Funny AI Bigfoot", 
+"Bigfoot forest discovery", "AI Bigfoot prank hunters", "Bigfoot BBQ AI", "Yeti vs Bigfoot vlog", 
+"Bigfoot woodworking AI", "AI Bigfoot lake swim", "AI Bigfoot yoga session", 
+"AI forest workout vlog", "Bigfoot cabin build AI,AI-generated cryptid vlog", "Bigfoot wildlife vlog", "Bigfoot forest prank video", 
+"Bigfoot cooking pizza AI", "AI Bigfoot lost gear,AI Bigfoot full day vlog", "Bigfoot AI companionship"
 ]
 
 # Fetch Data Button
