@@ -12,11 +12,11 @@ YOUTUBE_CHANNEL_URL = "https://www.googleapis.com/youtube/v3/channels"
 st.title("YouTube Viral Topics Tool")
 
 # Input Fields
-days = st.number_input("Enter Days to Search (1-30):", min_value=1, max_value=30, value=5)
+days = st.number_input("Enter Days to Search (1-60):", min_value=1, max_value=60, value=7)
 
 # List of broader keywords
 keywords = [
- "bigfoot ai vlog", "bigfoot forest vlog", "bigfoot cooking ai", "ai forest vlog", "ai bigfoot meme", "bigfoot forest 360", "bigfoot ai 360 vr", "bigfoot pizza forest", "ai bigfoot funny", "bigfoot ai prank", "bigfoot forest cooking", "ai generated bigfoot", "bigfoot ai short", "ai forest adventure", "forest vlog bigfoot ai", "ai bigfoot deer hunting", "bigfoot cabin vlog", "bigfoot ai funk", "bigfoot 4k forest vlog", "ai bigfoot viral", "bigfoot ai forest 3d", "bigfoot ai music", "ai bigfoot vr 360", "funny ai bigfoot clip", "bigfoot ai morning vlog", "ai bigfoot bbq forest", "bigfoot ai meme remix", "ai bigfoot dance", "ai forest survival vlog", "ai bigfoot food vlog", "dipssy bigfoot ai", "funky bigfoot vr", "bigfoot 360 prank", "ai bigfoot bop", "forest ai dance", "crunchy bigfoot 4k", "ai bigfoot drops", "loud bigfoot meme", "spinning forest ai", "modded bigfoot ai", "bigfoot vlogs meme", "bigfoot vlogs trend", "bigfoot vlogs tiktok", "ai generated cryptid trend", "bigfoot vlog meme", "ai bigfoot influencer", "bigfoot vlog comedy", "bigfoot vlogs skit", "ai bigfoot collab", "bigfoot gorilla maasai vlog", "bigfoot wild collab", "wildnet series", "cryptid comedy trend"
+ "ethan hawke horror", "justin long horror", "finn wittrock horror", "jaeden martell horror", "finn wolfhard horror", "horror actor reaction", "horror movie actor vlog", "paranormal actor stories", "ghost movie actor interview", "ethan hawke interview horror", "jaeden martell it", "finn wolfhard it movie", "justin long tush horror", "finn wittrock ahs", "american horror story actor", "serial killer actor", "horror film star", "horror movie cast", "new horror actor", "rising horror actor", "scream king actor", "horror actor behind scenes", "iconic horror actor", "vintage horror actor", "horror actor compilation", "spooky actor interview", "horror actor reaction", "horror movie trend actor", "actor horror fandom", "horror actor meme"
 ]
 
 # Fetch Data Button
@@ -87,7 +87,7 @@ if st.button("Fetch Data"):
                 views = int(stat["statistics"].get("viewCount", 0))
                 subs = int(channel["statistics"].get("subscriberCount", 0))
 
-                if subs < 3000:  # Only include channels with fewer than 3,000 subscribers
+                if subs < 6000:  # Only include channels with fewer than 6,000 subscribers
                     all_results.append({
                         "Title": title,
                         "Description": description,
@@ -109,7 +109,7 @@ if st.button("Fetch Data"):
                 )
                 st.write("---")
         else:
-            st.warning("No results found for channels with fewer than 3,000 subscribers.")
+            st.warning("No results found for channels with fewer than 6,000 subscribers.")
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
