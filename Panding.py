@@ -9,33 +9,33 @@ YOUTUBE_VIDEO_URL = "https://www.googleapis.com/youtube/v3/videos"
 YOUTUBE_CHANNEL_URL = "https://www.googleapis.com/youtube/v3/channels"
 
 # Streamlit App Title
-st.title("YouTube Viral Topics Tool (Smart Score Edition)")
+st.title("YouTube Viral Topics Tool")
 
 # Input Fields
 days = st.number_input("Enter Days to Search (1-90):", min_value=1, max_value=90, value=7)
 
 # List of broader keywords
 keywords = [
- "tung tung tung sahur", "tung sahur", "tung tung sahur", "tung turng tung sahur", 
-"tung tung tung sahur vr", "tung tung tung sahur 360", "tung tung tung sahur vr 360", "tung tung tung sahur meme", "sahur", 
-"tung tung tung tung sahur", "tung tung tung sahur funk", "tung tung tung sahur original", "tungtung sahur", 
-"tung tung sahur 3d", "tung tung sahur funk", "tung tung sahur song", 
-"tungtungtung sahur", "tung tung sahur modu", "tung sahur funk", "tung tung tung sahur 4k", 
-"dipssy tung tung sahur"
+ "AI Bigfoot vlog", "Forest AI vlog", "Mythical creature vlog", "AI-generated forest vlog", 
+"AI Bigfoot cooking", "Bigfoot forest adventure", "Bigfoot deer hunting AI", "Cryptid comedy vlog", "Funny AI Bigfoot", 
+"Bigfoot forest discovery", "AI Bigfoot prank hunters", "Bigfoot BBQ AI", "Yeti vs Bigfoot vlog", 
+"Bigfoot woodworking AI", "AI Bigfoot lake swim", "AI Bigfoot yoga session", 
+"AI forest workout vlog", "Bigfoot cabin build AI,AI-generated cryptid vlog", "Bigfoot wildlife vlog", "Bigfoot forest prank video", 
+"Bigfoot cooking pizza AI", "AI Bigfoot lost gear,AI Bigfoot full day vlog", "Bigfoot AI companionship"
 ]
-
-# Keywords for scoring titles
-important_keywords = ["ai", "bigfoot", "vlog", "forest", "prank", "funny", "cryptid", "cooking", "hunting", "adventure"]
 
 # Fetch Data Button
 if st.button("Fetch Data"):
     try:
+        # Calculate date range
         start_date = (datetime.utcnow() - timedelta(days=int(days))).isoformat("T") + "Z"
         all_results = []
 
+        # Iterate over the list of keywords
         for keyword in keywords:
             st.write(f"Searching for keyword: {keyword}")
 
+            # Define search parameters
             search_params = {
                 "part": "snippet",
                 "q": keyword,
@@ -46,9 +46,11 @@ if st.button("Fetch Data"):
                 "key": API_KEY,
             }
 
+            # Fetch video data
             response = requests.get(YOUTUBE_SEARCH_URL, params=search_params)
             data = response.json()
 
+            # Check if "items" key exists
             if "items" not in data or not data["items"]:
                 st.warning(f"No videos found for keyword: {keyword}")
                 continue
@@ -61,78 +63,54 @@ if st.button("Fetch Data"):
                 st.warning(f"Skipping keyword: {keyword} due to missing video/channel data.")
                 continue
 
+            # Fetch video statistics
             stats_params = {"part": "statistics", "id": ",".join(video_ids), "key": API_KEY}
             stats_response = requests.get(YOUTUBE_VIDEO_URL, params=stats_params)
             stats_data = stats_response.json()
 
+            if "items" not in stats_data or not stats_data["items"]:
+                st.warning(f"Failed to fetch video statistics for keyword: {keyword}")
+                continue
+
+            # Fetch channel statistics
             channel_params = {"part": "statistics", "id": ",".join(channel_ids), "key": API_KEY}
             channel_response = requests.get(YOUTUBE_CHANNEL_URL, params=channel_params)
             channel_data = channel_response.json()
 
-            if "items" not in stats_data or not stats_data["items"] or "items" not in channel_data or not channel_data["items"]:
+            if "items" not in channel_data or not channel_data["items"]:
+                st.warning(f"Failed to fetch channel statistics for keyword: {keyword}")
                 continue
 
-            # Dictionary mapping for accurate stats
-            video_stats_map = {item["id"]: item for item in stats_data["items"]}
-            channel_stats_map = {item["id"]: item for item in channel_data["items"]}
+            stats = stats_data["items"]
+            channels = channel_data["items"]
 
-            for video in videos:
-                video_id = video["id"].get("videoId")
-                channel_id = video["snippet"].get("channelId")
-
-                if not video_id or not channel_id:
-                    continue
-
-                stat = video_stats_map.get(video_id)
-                channel = channel_stats_map.get(channel_id)
-
-                if not stat or not channel:
-                    continue
-
+            # Collect results
+            for video, stat, channel in zip(videos, stats, channels):
                 title = video["snippet"].get("title", "N/A")
                 description = video["snippet"].get("description", "")[:100]
-                video_url = f"https://www.youtube.com/watch?v={video_id}"
+                video_url = f"https://www.youtube.com/watch?v={video['id']['videoId']}"
                 views = int(stat["statistics"].get("viewCount", 0))
-                likes = int(stat["statistics"].get("likeCount", 0))
-                comments = int(stat["statistics"].get("commentCount", 0))
                 subs = int(channel["statistics"].get("subscriberCount", 0))
 
-                # Engagement Rate
-                engagement_rate = round(((likes + comments) / views) * 100, 2) if views else 0.0
-
-                # Title Score
-                title_score = sum(1 for word in important_keywords if word.lower() in title.lower())
-
-                # Smart Score
-                smart_score = round((views / (subs + 1)) * (1 + title_score + (engagement_rate / 100)), 2)
-
-                if subs < 5000:
+                if subs < 5000:  # Only include channels with fewer than 5,000 subscribers
                     all_results.append({
                         "Title": title,
                         "Description": description,
                         "URL": video_url,
                         "Views": views,
-                        "Subscribers": subs,
-                        "Engagement Rate (%)": engagement_rate,
-                        "Title Score": title_score,
-                        "Smart Score": smart_score
+                        "Subscribers": subs
                     })
 
-        # Sort by Smart Score descending
-        all_results = sorted(all_results, key=lambda x: x["Smart Score"], reverse=True)
-
+        # Display results
         if all_results:
             st.success(f"Found {len(all_results)} results across all keywords!")
             for result in all_results:
                 st.markdown(
-                    f"### 📈 **{result['Title']}**\n"
-                    f"- 📹 **Views:** {result['Views']}\n"
-                    f"- 👥 **Subscribers:** {result['Subscribers']}\n"
-                    f"- 💬 **Engagement Rate:** {result['Engagement Rate (%)']}%\n"
-                    f"- 🎯 **Title Score:** {result['Title Score']}\n"
-                    f"- 🧠 **Smart Score:** {result['Smart Score']}\n"
-                    f"- 🔗 [Watch Now]({result['URL']})\n"
-                    f"_{result['Description']}..._"
+                    f"**Title:** {result['Title']}  \n"
+                    f"**Description:** {result['Description']}  \n"
+                    f"**URL:** [Watch Video]({result['URL']})  \n"
+                    f"**Views:** {result['Views']}  \n"
+                    f"**Subscribers:** {result['Subscribers']}"
                 )
                 st.write("---")
         else:
