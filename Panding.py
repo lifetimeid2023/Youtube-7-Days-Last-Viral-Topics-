@@ -17,11 +17,12 @@ days = st.number_input("Enter Days to Search (1-90):", min_value=1, max_value=90
 # List of broader keywords
 keywords = [
  "AI Bigfoot vlog", "Forest AI vlog", "Mythical creature vlog", "AI-generated forest vlog", 
-"AI Bigfoot cooking", "Bigfoot forest adventure", "Bigfoot deer hunting AI", "Cryptid comedy vlog", "Funny AI Bigfoot", 
-"Bigfoot forest discovery", "AI Bigfoot prank hunters", "Bigfoot BBQ AI", "Yeti vs Bigfoot vlog", 
-"Bigfoot woodworking AI", "AI Bigfoot lake swim", "AI Bigfoot yoga session", 
-"AI forest workout vlog", "Bigfoot cabin build AI,AI-generated cryptid vlog", "Bigfoot wildlife vlog", "Bigfoot forest prank video", 
-"Bigfoot cooking pizza AI", "AI Bigfoot lost gear,AI Bigfoot full day vlog", "Bigfoot AI companionship"
+ "AI Bigfoot cooking", "Bigfoot forest adventure", "Bigfoot deer hunting AI", "Cryptid comedy vlog", "Funny AI Bigfoot", 
+ "Bigfoot forest discovery", "AI Bigfoot prank hunters", "Bigfoot BBQ AI", "Yeti vs Bigfoot vlog", 
+ "Bigfoot woodworking AI", "AI Bigfoot lake swim", "AI Bigfoot yoga session", 
+ "AI forest workout vlog", "Bigfoot cabin build AI", "AI-generated cryptid vlog", "Bigfoot wildlife vlog", 
+ "Bigfoot forest prank video", "Bigfoot cooking pizza AI", "AI Bigfoot lost gear", 
+ "AI Bigfoot full day vlog", "Bigfoot AI companionship"
 ]
 
 # Keywords for scoring titles
@@ -72,13 +73,26 @@ if st.button("Fetch Data"):
             if "items" not in stats_data or not stats_data["items"] or "items" not in channel_data or not channel_data["items"]:
                 continue
 
-            stats = stats_data["items"]
-            channels = channel_data["items"]
+            # Dictionary mapping for accurate stats
+            video_stats_map = {item["id"]: item for item in stats_data["items"]}
+            channel_stats_map = {item["id"]: item for item in channel_data["items"]}
 
-            for video, stat, channel in zip(videos, stats, channels):
+            for video in videos:
+                video_id = video["id"].get("videoId")
+                channel_id = video["snippet"].get("channelId")
+
+                if not video_id or not channel_id:
+                    continue
+
+                stat = video_stats_map.get(video_id)
+                channel = channel_stats_map.get(channel_id)
+
+                if not stat or not channel:
+                    continue
+
                 title = video["snippet"].get("title", "N/A")
                 description = video["snippet"].get("description", "")[:100]
-                video_url = f"https://www.youtube.com/watch?v={video['id']['videoId']}"
+                video_url = f"https://www.youtube.com/watch?v={video_id}"
                 views = int(stat["statistics"].get("viewCount", 0))
                 likes = int(stat["statistics"].get("likeCount", 0))
                 comments = int(stat["statistics"].get("commentCount", 0))
@@ -93,7 +107,7 @@ if st.button("Fetch Data"):
                 # Smart Score
                 smart_score = round((views / (subs + 1)) * (1 + title_score + (engagement_rate / 100)), 2)
 
-                if subs < 2000:
+                if subs < 5000:
                     all_results.append({
                         "Title": title,
                         "Description": description,
@@ -123,7 +137,7 @@ if st.button("Fetch Data"):
                 )
                 st.write("---")
         else:
-            st.warning("No results found for channels with fewer than 2,000 subscribers.")
+            st.warning("No results found for channels with fewer than 5,000 subscribers.")
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
