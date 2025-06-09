@@ -43,7 +43,7 @@ if st.button("Fetch Data"):
                 "type": "video",
                 "order": "viewCount",
                 "publishedAfter": start_date,
-                "maxResults": 5,
+                "maxResults": 15,
                 "key": API_KEY,
             }
 
@@ -128,19 +128,3 @@ if st.button("Fetch Data"):
 
     except Exception as e:
         st.error(f"An error occurred: {e}")
-
-# -------------------------------
-# 📌 Future Upgrade Ideas Section
-# -------------------------------
-with st.expander("🚀 Future Upgrade Ideas"):
-    st.markdown("""
-    - 🔍 Add **keyword trend graphs** using Google Trends API  
-    - 🧠 Integrate **AI-based thumbnail analysis** (CTR prediction)  
-    - 🎬 Include **video duration & avg. watch time** (via YouTube Data API v3 + Analytics API)  
-    - 💬 Analyze **top comment sentiment** using sentiment analysis  
-    - 🕒 Add **auto-scheduler for daily/weekly scanning**  
-    - 🪄 One-click **prompt generator** for video scripts based on top results  
-    - 📊 Export data to **CSV or Google Sheets**  
-    - 🌍 Add **Geo-tag filtering** (country-specific trends)  
-    - 📱 Add **mobile-friendly UI** and dark mode toggle  
-    """)
