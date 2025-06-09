@@ -12,19 +12,23 @@ YOUTUBE_CHANNEL_URL = "https://www.googleapis.com/youtube/v3/channels"
 st.title("YouTube Viral Topics Tool (Smart Score Edition)")
 
 # Input Fields
-days = st.number_input("Enter Days to Search (1-60):", min_value=1, max_value=60, value=30)
+days = st.number_input("Enter Days to Search (1-90):", min_value=1, max_value=90, value=7)
 
-# Keywords
+# ✅ Subscriber filter inputs
+min_subs = st.number_input("Minimum Subscribers:", min_value=0, value=0)
+max_subs = st.number_input("Maximum Subscribers:", min_value=1, value=5000)
+
+# List of broader keywords
 keywords = [
-    "AI Bigfoot vlog", "Forest AI vlog", "Mythical creature vlog", "AI-generated forest vlog",
-    "AI Bigfoot cooking", "Bigfoot forest adventure", "Bigfoot deer hunting AI", "Cryptid comedy vlog",
-    "Funny AI Bigfoot", "Bigfoot forest discovery", "AI Bigfoot prank hunters", "Bigfoot BBQ AI",
-    "Yeti vs Bigfoot vlog", "Bigfoot woodworking AI", "AI Bigfoot lake swim", "AI Bigfoot yoga session",
-    "AI forest workout vlog", "Bigfoot cabin build AI", "AI-generated cryptid vlog", "Bigfoot wildlife vlog",
-    "Bigfoot forest prank video", "Bigfoot cooking pizza AI", "AI Bigfoot lost gear", "AI Bigfoot full day vlog",
-    "Bigfoot AI companionship"
+    "tung tung tung sahur", "tung sahur", "tung tung sahur", "tung turng tung sahur", 
+    "tung tung tung sahur vr", "tung tung tung sahur 360", "tung tung tung sahur vr 360", "tung tung tung sahur meme", "sahur", 
+    "tung tung tung tung sahur", "tung tung tung sahur funk", "tung tung tung sahur original", "tungtung sahur", 
+    "tung tung sahur 3d", "tung tung sahur funk", "tung tung sahur song", 
+    "tungtungtung sahur", "tung tung sahur modu", "tung sahur funk", "tung tung tung sahur 4k", 
+    "dipssy tung tung sahur"
 ]
 
+# Keywords for scoring titles
 important_keywords = ["ai", "bigfoot", "vlog", "forest", "prank", "funny", "cryptid", "cooking", "hunting", "adventure"]
 
 # Fetch Data Button
@@ -34,7 +38,7 @@ if st.button("Fetch Data"):
         all_results = []
 
         for keyword in keywords:
-            st.write(f"🔍 Searching for keyword: `{keyword}`")
+            st.write(f"Searching for keyword: {keyword}")
 
             search_params = {
                 "part": "snippet",
@@ -42,83 +46,88 @@ if st.button("Fetch Data"):
                 "type": "video",
                 "order": "viewCount",
                 "publishedAfter": start_date,
-                "maxResults": 25,
+                "maxResults": 5,
                 "key": API_KEY,
             }
 
             response = requests.get(YOUTUBE_SEARCH_URL, params=search_params)
             data = response.json()
 
-            # Debug output
-            if "items" not in data:
-                st.warning(f"❌ No response for keyword: {keyword}")
-                st.json(data)
+            if "items" not in data or not data["items"]:
+                st.warning(f"No videos found for keyword: {keyword}")
                 continue
 
             videos = data["items"]
-            if not videos:
-                st.warning(f"⚠️ No videos found for keyword: {keyword}")
-                continue
-
-            video_ids = [v["id"]["videoId"] for v in videos if "id" in v and "videoId" in v["id"]]
-            channel_ids = [v["snippet"]["channelId"] for v in videos if "snippet" in v and "channelId" in v["snippet"]]
+            video_ids = [video["id"]["videoId"] for video in videos if "id" in video and "videoId" in video["id"]]
+            channel_ids = [video["snippet"]["channelId"] for video in videos if "snippet" in video and "channelId" in video["snippet"]]
 
             if not video_ids or not channel_ids:
-                st.warning(f"⚠️ Skipping keyword: {keyword} due to missing video/channel IDs.")
+                st.warning(f"Skipping keyword: {keyword} due to missing video/channel data.")
                 continue
 
-            stats_response = requests.get(YOUTUBE_VIDEO_URL, params={
-                "part": "statistics", "id": ",".join(video_ids), "key": API_KEY
-            })
+            stats_params = {"part": "statistics", "id": ",".join(video_ids), "key": API_KEY}
+            stats_response = requests.get(YOUTUBE_VIDEO_URL, params=stats_params)
             stats_data = stats_response.json()
 
-            channel_response = requests.get(YOUTUBE_CHANNEL_URL, params={
-                "part": "statistics", "id": ",".join(channel_ids), "key": API_KEY
-            })
+            channel_params = {"part": "statistics", "id": ",".join(channel_ids), "key": API_KEY}
+            channel_response = requests.get(YOUTUBE_CHANNEL_URL, params=channel_params)
             channel_data = channel_response.json()
 
-            if "items" not in stats_data or not stats_data["items"]:
-                st.warning(f"⚠️ No stats found for keyword: {keyword}")
-                continue
-            if "items" not in channel_data or not channel_data["items"]:
-                st.warning(f"⚠️ No channel data found for keyword: {keyword}")
+            if "items" not in stats_data or not stats_data["items"] or "items" not in channel_data or not channel_data["items"]:
                 continue
 
-            for video, stat, channel in zip(videos, stats_data["items"], channel_data["items"]):
+            # Dictionary mapping for accurate stats
+            video_stats_map = {item["id"]: item for item in stats_data["items"]}
+            channel_stats_map = {item["id"]: item for item in channel_data["items"]}
+
+            for video in videos:
+                video_id = video["id"].get("videoId")
+                channel_id = video["snippet"].get("channelId")
+
+                if not video_id or not channel_id:
+                    continue
+
+                stat = video_stats_map.get(video_id)
+                channel = channel_stats_map.get(channel_id)
+
+                if not stat or not channel:
+                    continue
+
                 title = video["snippet"].get("title", "N/A")
                 description = video["snippet"].get("description", "")[:100]
-                video_url = f"https://www.youtube.com/watch?v={video['id']['videoId']}"
+                video_url = f"https://www.youtube.com/watch?v={video_id}"
                 views = int(stat["statistics"].get("viewCount", 0))
                 likes = int(stat["statistics"].get("likeCount", 0))
                 comments = int(stat["statistics"].get("commentCount", 0))
-
-                try:
-                    subs = int(channel["statistics"].get("subscriberCount", 0))
-                except:
-                    subs = 0  # If subscriberCount is hidden or unavailable
+                subs = int(channel["statistics"].get("subscriberCount", 0))
 
                 # Engagement Rate
                 engagement_rate = round(((likes + comments) / views) * 100, 2) if views else 0.0
+
+                # Title Score
                 title_score = sum(1 for word in important_keywords if word.lower() in title.lower())
+
+                # Smart Score
                 smart_score = round((views / (subs + 1)) * (1 + title_score + (engagement_rate / 100)), 2)
 
-                # Subscriber filter removed for debug phase
-                all_results.append({
-                    "Title": title,
-                    "Description": description,
-                    "URL": video_url,
-                    "Views": views,
-                    "Subscribers": subs,
-                    "Engagement Rate (%)": engagement_rate,
-                    "Title Score": title_score,
-                    "Smart Score": smart_score
-                })
+                # ✅ Filter based on subscriber range
+                if min_subs <= subs <= max_subs:
+                    all_results.append({
+                        "Title": title,
+                        "Description": description,
+                        "URL": video_url,
+                        "Views": views,
+                        "Subscribers": subs,
+                        "Engagement Rate (%)": engagement_rate,
+                        "Title Score": title_score,
+                        "Smart Score": smart_score
+                    })
 
-        # Sort and display
+        # Sort by Smart Score descending
         all_results = sorted(all_results, key=lambda x: x["Smart Score"], reverse=True)
 
         if all_results:
-            st.success(f"✅ Found {len(all_results)} results across all keywords!")
+            st.success(f"Found {len(all_results)} results across all keywords!")
             for result in all_results:
                 st.markdown(
                     f"### 📈 **{result['Title']}**\n"
@@ -132,7 +141,7 @@ if st.button("Fetch Data"):
                 )
                 st.write("---")
         else:
-            st.warning("😕 No results found — try increasing days or removing filters.")
+            st.warning(f"No results found for channels with subscribers between {min_subs} and {max_subs}.")
 
     except Exception as e:
-        st.error(f"❗ Error occurred: {str(e)}")
+        st.error(f"An error occurred: {e}")
